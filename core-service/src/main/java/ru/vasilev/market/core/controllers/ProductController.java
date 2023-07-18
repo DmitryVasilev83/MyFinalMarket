@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import ru.vasilev.market.api.ProductCardDto;
+import ru.vasilev.market.core.mappers.ProductCardMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -22,7 +24,6 @@ import ru.vasilev.market.core.entities.Product;
 import ru.vasilev.market.core.exceptions.AppError;
 import ru.vasilev.market.core.services.CategoryService;
 import ru.vasilev.market.core.services.ProductService;
-
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class ProductController {
     private final ProductService productService;
     private final CategoryService categoryService;
     private final ProductMapper productMapper;
+    private final ProductCardMapper productCardMapper;
 
     @GetMapping
     public Page<ProductDto> getAllProducts(
@@ -74,7 +76,7 @@ public class ProductController {
     }
 
     @GetMapping("/forAdmin/getProduct")
-    public Page<ProductDto> getProductForAdmin(
+    public Page<ProductCardDto> getProductForAdmin(
             @RequestParam(name = "p", defaultValue = "1") Integer page,
             @RequestParam(name = "page_size", defaultValue = "5") Integer pageSize,
             @RequestParam(name = "title_part", required = false) String titlePart
@@ -86,7 +88,7 @@ public class ProductController {
         if (titlePart != null) {
             spec = spec.and(ProductsSpecifications.titleLike(titlePart));
         }
-        return productService.findAll(page - 1, pageSize, spec).map(productMapper::mapProductToProductDto);
+        return productService.findAll(page - 1, pageSize, spec).map(productCardMapper::mapProductToProductCardDto);
     }
 
     @Operation(
@@ -117,16 +119,16 @@ public class ProductController {
     )
     @PostMapping("/forAdmin/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<?> createNewProducts(@RequestBody ProductDto productDto) {
-        productService.createNewProduct(productDto);
-        StringResponse stringResponse = new StringResponse(String.format("Продукт %s успешно создан", productDto.getTitle()));
+    public ResponseEntity<?> createNewProducts(@RequestBody ProductCardDto productCardDto) {
+        productService.createNewProduct(productCardDto);
+        StringResponse stringResponse = new StringResponse(String.format("Продукт %s успешно создан", productCardDto.getTitle()));
         return ResponseEntity.ok(stringResponse);
     }
 
     @PostMapping("/forAdmin/updateProduct")
-    public ResponseEntity<?> updateDataProduct(@RequestBody ProductDto productDto) {
-        productService.updateProduct(productDto);
-        StringResponse stringResponse = new StringResponse(String.format("Продукт %s успешно обновлен", productDto.getTitle()));
+    public ResponseEntity<?> updateDataProduct(@RequestBody ProductCardDto productCardDto) {
+        productService.updateProduct(productCardDto);
+        StringResponse stringResponse = new StringResponse(String.format("Продукт %s успешно обновлен", productCardDto.getTitle()));
         return ResponseEntity.ok(stringResponse);
     }
 
@@ -138,5 +140,11 @@ public class ProductController {
     @PostMapping("/forAdmin/editVisible/{id}")
     public void updateVisibleProduct(@PathVariable Long id, @RequestParam(name = "visible") Boolean visible) {
         productService.updateVisible(id, visible);
+    }
+
+    @GetMapping("/card/{id}")
+    public ProductCardDto getProductCardById(@PathVariable @Parameter(description = "Идентификатор продукта", required = true) Long id) {
+        return productCardMapper.mapProductToProductCardDto(productService.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Продукт с id: " + id + " не найден")));
     }
 }
