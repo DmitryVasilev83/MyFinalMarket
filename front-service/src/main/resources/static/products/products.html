@@ -21,7 +21,7 @@
         </thead>
         <tbody>
         <tr ng-repeat="p in productsPage.content">
-            <td>{{p.title}}</td>
+            <td><a id="link" data-ng-click="showInfoById(p.id)" href ng-click="">{{p.title}}</a></td>
             <td>{{p.price}}</td>
             <td>{{p.categoryTitle}}</td>
             <td>
@@ -30,7 +30,7 @@
             </td>
             <td>
                 <button class="btn btn-outline-success btn-sm"
-                        ng-click="updateProduct(p.id, p.title, p.price, p.categoryTitle)">Редактировать</button>
+                        ng-click="updateProduct(p.id, p.title, p.price, p.categoryTitle, p.description)">Редактировать</button>
             </td>
         </tr>
         </tbody>

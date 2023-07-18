@@ -1,5 +1,5 @@
 angular.module('market').controller('cartController',
-    function ($scope, $http, $localStorage, $rootScope) {
+    function ($scope, $http, $localStorage, $rootScope, $location, $routeParams) {
 
         $scope.loadCart = function () {
             $http.get('http://localhost:5555/cart/api/v1/cart/' + $localStorage.mstMarketGuestCartId)
@@ -48,6 +48,10 @@ angular.module('market').controller('cartController',
                 });
         }
 
-        $scope.loadCart();
+         $scope.showInfoById= function (id) {
+                    $location.path('/productCard').search('id=' + id);
+         }
+
+         $scope.loadCart();
 
     });
