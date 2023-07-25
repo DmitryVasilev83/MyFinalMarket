@@ -13,9 +13,6 @@ angular.module('market').controller('storeController', function ($scope, $http, 
             }
         }).then(function (response) {
             $scope.productsPage = response.data;
-            for (let p of $scope.productsPage.content) {
-                console.log(p)
-            }
             $scope.generatePagesList($scope.productsPage.totalPages);
         });
     };
@@ -31,16 +28,39 @@ angular.module('market').controller('storeController', function ($scope, $http, 
             });
     }
 
+    $scope.addToFavorite = function (id) {
+            $http.get('http://localhost:5555/favorite/api/v1/favorite/' + $localStorage.mstMarketGuestCartId + '/add/' + id)
+                .then(function (response) {
+                    $rootScope.currentFavoriteUser = response.data;
+                });
+        }
+
     $rootScope.suchAProductAlreadyExists = function (id) {
         if ($rootScope.currentCartUser) {
             for (let i = 0; i < $rootScope.currentCartUser.items.length; i++) {
                 let product = $rootScope.currentCartUser.items[i];
-                console.log(product);
                 if (product.productId === id) return false;
             }
         }
         return true;
     }
+
+    $scope.deleteFromFavorite = function (id) {
+            $http.get('http://localhost:5555/favorite/api/v1/favorite/' + $localStorage.mstMarketGuestCartId + '/delete/' + id)
+                .then(function (response) {
+                    $scope.loadFavorite();
+                });
+        }
+
+        $rootScope.inFavorite = function (id) {
+            if ($rootScope.currentFavoriteUser) {
+                for (let i = 0; i < $rootScope.currentFavoriteUser.items.length; i++) {
+                    let favProduct = $rootScope.currentFavoriteUser.items[i];
+                    if (favProduct.productId === id) return true;
+                }
+            }
+            return false;
+        }
 
     $scope.generatePagesList = function (totalPages) {
         out = [];
@@ -63,7 +83,16 @@ angular.module('market').controller('storeController', function ($scope, $http, 
         });
     }
 
+     $scope.loadFavorite = function () {
+            $http.get('http://localhost:5555/favorite/api/v1/favorite/' + $localStorage.mstMarketGuestCartId)
+                .then(function (response) {
+                    $scope.favorite = response.data;
+                    $rootScope.currentFavoriteUser = response.data;
+                });
+        };
+
     $scope.loadCart();
     $scope.loadProducts();
     $scope.getCategories();
+    $scope.loadFavorite();
 });

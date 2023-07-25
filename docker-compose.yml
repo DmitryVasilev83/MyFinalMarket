@@ -77,6 +77,15 @@ services:
 #    ports:
 #      - "8190:8190"
 
+#  favorite-service:
+#    image: favorite-service
+#    build:
+#      context: favorite-service/
+#    depends_on:
+#      - redis
+#    ports:
+#      - "8192:8192"
+
 
 
 
