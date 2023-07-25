@@ -14,7 +14,6 @@ import ru.vasilev.market.core.exceptions.ResourceNotFoundException;
 import ru.vasilev.market.core.exceptions.TheProductExistsException;
 import ru.vasilev.market.core.repositories.ProductRepository;
 import ru.vasilev.market.core.entities.Product;
-
 import java.util.Optional;
 
 @Service
