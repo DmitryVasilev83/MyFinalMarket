@@ -1,0 +1,81 @@
+package ru.vasilev.market.comment.controllers;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import ru.vasilev.market.api.CommentDto;
+import ru.vasilev.market.api.StringResponse;
+import ru.vasilev.market.api.ValueWrapper;
+import ru.vasilev.market.comment.entities.Comment;
+import ru.vasilev.market.comment.mappers.CommentMapper;
+import ru.vasilev.market.comment.services.CommentService;
+import ru.vasilev.market.comment.specifications.CommentSpecifications;
+
+@RestController
+@RequestMapping("/api/v1/comments")
+@RequiredArgsConstructor
+@Tag(name = "Комментарии", description = "Методы работы с комментариями")
+public class CommentController {
+    private final CommentService commentService;
+    private final CommentMapper commentMapper;
+
+
+    @GetMapping
+    public Page<CommentDto> getAllComments(
+            @RequestParam(name = "p", defaultValue = "1") @Parameter(description = "Номер страницы", required = true) Integer page,
+            @RequestParam(name = "page_size", defaultValue = "10") @Parameter(description = "Номер страницы", required = false) Integer pageSize,
+            @RequestParam(name = "product") @Parameter(description = "Название продукта", required = true) String productTitle
+    ) {
+        if (page < 1) {
+            page = 1;
+        }
+        Specification<Comment> spec = Specification.where(null);
+        if (productTitle != null) {
+            spec = spec.and(CommentSpecifications.productTitleEquals(productTitle))
+                    .and(CommentSpecifications.visibleLike());
+        } else {
+            spec = spec.and(CommentSpecifications.visibleLike());
+        }
+
+
+        return commentService.findAll(page - 1, pageSize, spec).map(commentMapper::mapCommentToCommentDto);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<?> createComment(@RequestBody CommentDto commentDto) {
+        commentService.createComment(commentDto);
+        StringResponse stringResponse = new StringResponse("Отзыв добавен");
+        return ResponseEntity.ok(stringResponse);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PutMapping("/my")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<?> updateComment(@RequestBody CommentDto commentDto) {
+        commentService.updateComment(commentDto);
+        StringResponse stringResponse = new StringResponse("Отзыв изменен");
+        return ResponseEntity.ok(stringResponse);
+    }
+
+
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @DeleteMapping("/{id}")
+    public void deleteComment(@PathVariable Long id) {
+        commentService.deleteById(id);
+    }
+
+    @GetMapping("/estimation/{product-title}")
+    public ValueWrapper<Double> getEstimation(@PathVariable(value = "product-title", required = true) String productTitle) {
+        return new ValueWrapper<>(commentService.getEstimation(productTitle));
+    }
+
+
+}

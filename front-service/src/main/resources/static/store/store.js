@@ -52,15 +52,15 @@ angular.module('market').controller('storeController', function ($scope, $http, 
                 });
         }
 
-        $rootScope.inFavorite = function (id) {
-            if ($rootScope.currentFavoriteUser) {
-                for (let i = 0; i < $rootScope.currentFavoriteUser.items.length; i++) {
-                    let favProduct = $rootScope.currentFavoriteUser.items[i];
-                    if (favProduct.productId === id) return true;
-                }
-            }
-            return false;
-        }
+    $rootScope.inFavorite = function (id) {
+         if ($rootScope.currentFavoriteUser) {
+             for (let i = 0; i < $rootScope.currentFavoriteUser.items.length; i++) {
+                 let favProduct = $rootScope.currentFavoriteUser.items[i];
+                 if (favProduct.productId === id) return true;
+             }
+         }
+         return false;
+    }
 
     $scope.generatePagesList = function (totalPages) {
         out = [];
