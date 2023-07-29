@@ -17,6 +17,7 @@
             <th>Название</th>
             <th>Цена</th>
             <th>Категория продукта</th>
+            <th>Количество в наличии</th>
         </tr>
         </thead>
         <tbody>
@@ -24,13 +25,14 @@
             <td><a id="link" data-ng-click="showInfoById(p.id)" href ng-click="">{{p.title}}</a></td>
             <td>{{p.price}}</td>
             <td>{{p.categoryTitle}}</td>
+            <td>{{p.quantity}}</td>
             <td>
             <button class="btn btn-outline-danger btn-sm" ng-click="editVisibleProduct(p.id, false)" ng-show="p.visible">Убрать из магазина</button>
             <button class="btn btn-outline-primary btn-sm" ng-click="editVisibleProduct(p.id, true)" ng-show="!p.visible">Вернуть в магазин</button>
             </td>
             <td>
                 <button class="btn btn-outline-success btn-sm"
-                        ng-click="updateProduct(p.id, p.title, p.price, p.categoryTitle, p.description)">Редактировать</button>
+                        ng-click="updateProduct(p.id, p.title, p.price, p.categoryTitle, p.quantity, p.description)">Редактировать</button>
             </td>
         </tr>
         </tbody>

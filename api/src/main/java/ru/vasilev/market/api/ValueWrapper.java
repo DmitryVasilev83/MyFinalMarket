@@ -1,0 +1,12 @@
+package ru.vasilev.market.api;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ValueWrapper<T> {
+    T value;
+}

@@ -12,6 +12,7 @@
 		<module>auth-service</module>
         <module>gateway-service</module>
         <module>favorite-service</module>
+		<module>comment-service</module>
     </modules>
 
 	<groupId>ru.vasilev.market</groupId>

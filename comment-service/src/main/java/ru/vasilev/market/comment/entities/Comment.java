@@ -1,4 +1,4 @@
-package ru.vasilev.market.core.entities;
+package ru.vasilev.market.comment.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,41 +6,32 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "products")
+@Table(name = "comments")
 @NoArgsConstructor
 @Data
 @Builder
 @AllArgsConstructor
-public class Product {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "title")
-    private String title;
+    @Column(name = "username")
+    private String username;
 
-    @Column(name = "price")
-    private BigDecimal price;
+    @Column(name = "product")
+    private String product;
+
+    @Column(name = "description", columnDefinition = "text")
+    private String description;
 
     @Column(name = "visible")
     private boolean visible;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;
-
-    @Column(name = "quantity")
-    private int quantity;
-
-    @Column(name = "description")
-    private String description;
 
     @Column(name = "created_at")
     @CreationTimestamp
@@ -49,4 +40,8 @@ public class Product {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(name = "estimation")
+    private Integer estimation;
+
 }
