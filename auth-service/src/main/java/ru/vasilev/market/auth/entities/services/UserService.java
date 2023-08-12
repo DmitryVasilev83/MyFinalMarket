@@ -1,4 +1,4 @@
-package ru.vasilev.market.auth.services;
+package ru.vasilev.market.auth.entities.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,10 +23,8 @@ import ru.vasilev.market.auth.exceptions.*;
 import ru.vasilev.market.auth.repositories.UserRepository;
 import ru.vasilev.market.auth.entities.Role;
 import ru.vasilev.market.auth.entities.User;
-import ru.vasilev.market.auth.exceptions.*;
 import ru.vasilev.market.auth.mappers.UserMapper;
 import ru.vasilev.market.auth.utils.JwtTokenUtil;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +44,14 @@ public class UserService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
+    public boolean existByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public boolean existByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -58,7 +64,6 @@ public class UserService implements UserDetailsService {
     }
 
     public void createUser(User user) {
-        user.setRoles(List.of(roleService.getUserRole()));
         userRepository.save(user);
     }
 
@@ -72,20 +77,26 @@ public class UserService implements UserDetailsService {
 
     public void reg(RegistrationUserDto registrationUserDto) {
         if (registrationUserDto.getUsername() == null || registrationUserDto.getPassword() == null
-                || registrationUserDto.getConfirmPassword() == null || registrationUserDto.getEmail() == null) {
+                || registrationUserDto.getConfirmPassword() == null || registrationUserDto.getEmail() == null
+                || registrationUserDto.getFullName() == null) {
             throw new FieldsNotNullException("Все поля формы должны быть заполнены");
         }
         if (!registrationUserDto.getPassword().equals(registrationUserDto.getConfirmPassword())) {
             throw new DontMatchPasswordsException("Пароли не совпадают");
         }
-        if (findByUsername(registrationUserDto.getUsername()).isPresent()) {
+        if (existByUsername(registrationUserDto.getUsername())) {
             throw new TheUserAlreadyExistsException("Пользователь с таким именем уже существует");
+        }
+        if (existByEmail(registrationUserDto.getEmail())) {
+            throw new TheUserAlreadyExistsException("Пользователь с таким email уже существует");
         }
         User user = new User();
         user.setEmail(registrationUserDto.getEmail());
         user.setUsername(registrationUserDto.getUsername());
         user.setPassword(passwordEncoder.encode(registrationUserDto.getPassword()));
+        user.setFullName(registrationUserDto.getFullName());
         user.setAccess(true);
+        user.setRoles(List.of(roleService.getUserRole()));
         createUser(user);
     }
 
@@ -93,16 +104,10 @@ public class UserService implements UserDetailsService {
         return jwtTokenUtil.generateToken(userDetails);
     }
 
-    public Collection<Role> getRolesUser(String username) {
-        return userRepository.findByUsername(username).get().getRoles();
-    }
 
     public boolean getAccessAdmin(String username) {
         Collection<Role> rolesUser = userRepository.findByUsername(username).get().getRoles();
-        for (Role role : rolesUser) {
-            if (role.getName().equals("ROLE_ADMIN")) return true;
-        }
-        return false;
+        return rolesUser.size() > 1;
     }
 
     public Page<User> findAll(int page, int pageSize, Specification<User> specification) {
@@ -124,9 +129,9 @@ public class UserService implements UserDetailsService {
         throw new IncorrectRoleUserException("Такой роли не существует!");
     }
 
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
-    }
+//    public void deleteUser(Long id) {
+//        userRepository.deleteById(id);
+//    }
 
     @Transactional
     public void updateAccessUser(Long id, Boolean flag) {
@@ -137,7 +142,7 @@ public class UserService implements UserDetailsService {
 
     public User getByName(String name) {
         return userRepository.findByUsername(name).orElseThrow(
-                () -> new ResourceNotFoundException("Пользователь не найден"));
+                () -> new ResourceNotFoundException("Пользователь " + name + " не найден."));
     }
 
     public void userFilter(String name) {
@@ -148,6 +153,10 @@ public class UserService implements UserDetailsService {
     public String getUserEmailByName(String name) {
         User user = getByName(name);
         return user.getEmail();
+    }
+
+    public String getFullNameByName(String name) {
+        return getByName(name).getFullName();
     }
 
     @Transactional
@@ -161,6 +170,13 @@ public class UserService implements UserDetailsService {
         if (registrationUserDto.getPassword() != null) {
             user.setPassword(passwordEncoder.encode(registrationUserDto.getPassword()));
         }
+        if (registrationUserDto.getFullName() != null) {
+            user.setFullName(registrationUserDto.getFullName());
+        }
         userRepository.save(user);
+    }
+
+    public List<String> getUserRoles(String username) {
+        return getByName(username).getRoles().stream().map(Role::getTitle).toList();
     }
 }

@@ -1,5 +1,5 @@
 alter table products
-add quantity integer;
+    add quantity integer;
 
 update products
 set quantity = 3

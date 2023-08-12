@@ -1,4 +1,4 @@
-package ru.vasilev.market.auth.services;
+package ru.vasilev.market.auth.entities.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,11 @@ public class RoleService {
         return roleRepository.findAll();
     }
 
+    public Role getAdminRole() {return roleRepository.findByName("ROLE_ADMIN").get(); }
+
     public List<String> getAllRolesStr() {
         return roleRepository.findAll().stream().map(Role::getName).toList();
     }
+
+    public List<String> getAllRoleTitles() {return roleRepository.findAll().stream().map(Role::getTitle).toList(); }
 }
