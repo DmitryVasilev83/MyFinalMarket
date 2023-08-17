@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.vasilev.market.api.JwtRequest;
 import ru.vasilev.market.api.JwtResponse;
 import ru.vasilev.market.api.RegistrationUserDto;
-import ru.vasilev.market.auth.mappers.UserMapper;
 import ru.vasilev.market.auth.services.UserService;
 
 @RestController
