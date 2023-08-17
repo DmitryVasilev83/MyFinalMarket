@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import ru.vasilev.market.api.ProductCardDto;
 import ru.vasilev.market.core.mappers.ProductCardMapper;
 import org.springframework.data.domain.Page;
@@ -75,8 +76,9 @@ public class ProductController {
         return categoryService.getAllCategories();
     }
 
-    @GetMapping("/forAdmin/getProduct")
-    public Page<ProductCardDto> getProductForAdmin(
+    @PreAuthorize("hasAuthority('ROLE_MANAGER')")
+    @GetMapping("/getProduct")
+    public Page<ProductCardDto> getProductListEdit(
             @RequestParam(name = "p", defaultValue = "1") Integer page,
             @RequestParam(name = "page_size", defaultValue = "5") Integer pageSize,
             @RequestParam(name = "title_part", required = false) String titlePart
@@ -117,7 +119,8 @@ public class ProductController {
                     )
             }
     )
-    @PostMapping("/forAdmin/create")
+    @PreAuthorize("hasAuthority('ROLE_MANAGER')")
+    @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> createNewProducts(@RequestBody ProductCardDto productCardDto) {
         productService.createNewProduct(productCardDto);
@@ -125,19 +128,21 @@ public class ProductController {
         return ResponseEntity.ok(stringResponse);
     }
 
-    @PostMapping("/forAdmin/updateProduct")
+    @PreAuthorize("hasAuthority('ROLE_MANAGER')")
+    @PostMapping("/updateProduct")
     public ResponseEntity<?> updateDataProduct(@RequestBody ProductCardDto productCardDto) {
         productService.updateProduct(productCardDto);
         StringResponse stringResponse = new StringResponse(String.format("Продукт %s успешно обновлен", productCardDto.getTitle()));
         return ResponseEntity.ok(stringResponse);
     }
 
-    @DeleteMapping("/{id}")
-    public void deleteProductById(@PathVariable Long id) {
-        productService.deleteById(id);
-    }
+//    @DeleteMapping("/{id}")
+//    public void deleteProductById(@PathVariable Long id) {
+//        productService.deleteById(id);
+//    }
 
-    @PostMapping("/forAdmin/editVisible/{id}")
+    @PreAuthorize("hasAuthority('ROLE_MANAGER')")
+    @PostMapping("/editVisible/{id}")
     public void updateVisibleProduct(@PathVariable Long id, @RequestParam(name = "visible") Boolean visible) {
         productService.updateVisible(id, visible);
     }

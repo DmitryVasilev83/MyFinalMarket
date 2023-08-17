@@ -4,14 +4,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import ru.vasilev.market.api.RegistrationUserDto;
-import ru.vasilev.market.api.StringResponse;
-import ru.vasilev.market.api.UserDto;
+import ru.vasilev.market.api.*;
 import ru.vasilev.market.auth.entities.User;
 import ru.vasilev.market.auth.mappers.UserMapper;
 import ru.vasilev.market.auth.repositories.Specifications.UsersSpecifications;
 import ru.vasilev.market.auth.services.UserService;
+import java.util.Objects;
+import ru.vasilev.market.auth.exceptions.AccessForbiddenException;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -20,7 +22,8 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
-    @GetMapping("/forAdmin/listUsers")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/all")
     public Page<UserDto> getAllUsers(
             @RequestParam(name = "p", defaultValue = "1") Integer page,
             @RequestParam(name = "page_size", defaultValue = "5") Integer pageSize,
@@ -36,29 +39,55 @@ public class UserController {
         return userService.findAll(page - 1, pageSize, spec).map(userMapper::mapUserToUserDto);
     }
 
-    @PostMapping("/forAdmin/roleEdit")
-    public ResponseEntity<?> roleEdit(@RequestBody UserDto userDto) {
-        userService.roleEdit(userDto);
-        StringResponse stringResponse = new StringResponse("Права пользователя изменены");
-        return ResponseEntity.ok(stringResponse);
+    @PreAuthorize("hasAuthority('ROLE_SUPERADMIN')")
+    @PutMapping("/edit-role")
+    public StringResponse editRole(@RequestBody UserDtoRoles userDtoRoles) {
+        userService.editRole(userDtoRoles);
+        return new StringResponse("Права пользователя изменены");
     }
 
-    @PostMapping("/forAdmin/banUser/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PostMapping("/banUser/{id}")
     public void banUser(@PathVariable Long id, @RequestParam(name = "access") Boolean access) {
         userService.updateAccessUser(id, access);
     }
 
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/email/{username}")
-    public ResponseEntity<?> getEmailUser(@PathVariable String username) {
-        StringResponse stringResponse = new StringResponse(userService.getUserEmailByName(username));
-        return ResponseEntity.ok(stringResponse);
+    public StringResponse getAnyEmailAddress(@PathVariable String username) {
+        return new StringResponse(userService.getUserEmailByName(username));
     }
 
-    @PostMapping("/updateUser")
-    public ResponseEntity<?> updateDataUser(@RequestBody RegistrationUserDto registrationUserDto) {
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/full-name/{username}")
+    public StringResponse getAnyFullName(@PathVariable String username) {
+        return new StringResponse(userService.getFullNameByName(username));
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @PutMapping("/my")
+    public StringResponse updateAnyUserData(@RequestBody RegistrationUserDto registrationUserDto, Principal principal) {
+        if (!Objects.equals(principal.getName(), registrationUserDto.getUsername())) {
+            throw new AccessForbiddenException("Запрещено изменять чужие персональные данные.");
+        }
         userService.updateUser(registrationUserDto);
-        StringResponse stringResponse = new StringResponse(String
-                .format("Данные пользователя %s успешно обновлены", registrationUserDto.getUsername()));
-        return ResponseEntity.ok(stringResponse);
+        return new StringResponse(String.format("Данные пользователя %s успешно обновлены.", registrationUserDto.getUsername()));
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @GetMapping("/personal-data/my")
+    public UserPersonalAccount getUserPersonalData(Principal principal) {
+        final String username = principal.getName();
+        return UserPersonalAccount.builder()
+                .username(username)
+                .email(userService.getUserEmailByName(username))
+                .fullName(userService.getFullNameByName(username))
+                .build();
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_USER')")
+    @GetMapping("/role-titles/my")
+    public RoleTitlesResponse getUserRoles(Principal principal) {
+        return userService.getUserRoles(principal.getName());
     }
 }

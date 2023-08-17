@@ -16,7 +16,11 @@ import ru.vasilev.market.core.integrations.CartServiceIntegration;
 import ru.vasilev.market.core.repositories.OrderRepository;
 import ru.vasilev.market.core.services.OrderService;
 import ru.vasilev.market.core.services.ProductService;
-
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +53,23 @@ public class OrderServiceTest {
                 .items(List.of(cartItemDto))
                 .build();
 
-        Mockito.doReturn(cartDto).when(cartServiceIntegration).getCurrentUserCart("Bob");
+        Principal principal = new Principal() {
+            @Override
+            public String getName() {
+                return "Bob";
+            }
+
+            @Override
+            public String toString() {
+                List<String> roles = new ArrayList<>();
+                roles.add("ROLE_USER");
+                UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken("Bob",
+                        null, roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
+                return token.toString();
+            }
+        };
+
+        Mockito.doReturn(cartDto).when(cartServiceIntegration).getCurrentUserCart(principal.getName(), principal.toString());
 
         Category category = Category.builder()
                 .id(4L)
@@ -64,8 +84,7 @@ public class OrderServiceTest {
                 .build();
 
         Mockito.doReturn(Optional.of(product)).when(productService).findById(1922L);
-
-        Order order = orderService.createNewOrder("Bob");
+        Order order = orderService.createNewOrder(principal.getName(), principal.toString());
         Assertions.assertEquals(order.getTotalPrice(), new BigDecimal(240));
         Mockito.verify(orderRepository, Mockito.times(1)).save(ArgumentMatchers.any());
     }
