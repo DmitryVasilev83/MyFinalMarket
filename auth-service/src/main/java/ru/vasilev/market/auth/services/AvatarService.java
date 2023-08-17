@@ -1,4 +1,4 @@
-package ru.vasilev.market.auth.entities.services;
+package ru.vasilev.market.auth.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

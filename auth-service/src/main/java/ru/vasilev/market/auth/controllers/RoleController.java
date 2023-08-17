@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.access.prepost.PreAuthorize;
-import ru.vasilev.market.auth.entities.services.RoleService;
-import java.util.List;
+import ru.vasilev.market.auth.services.RoleService;
+import ru.vasilev.market.api.ListResponse;
 
 @RestController
 @RequestMapping("/api/v1/roles")
@@ -15,15 +15,13 @@ public class RoleController {
 
     private final RoleService roleService;
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_SUPERADMIN')")
     @GetMapping
-    public List<String> getAllUserRoles() {
-        return roleService.getAllRolesStr();
-    }
+    public ListResponse getAllUserRoles() {
+        return new ListResponse(roleService.getAllRolesStr());}
 
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_USER')")
     @GetMapping("/titles")
-    public List<String> getAllRoleTitles() {
-        return roleService.getAllRoleTitles();
-    }
+    public ListResponse getAllRoleTitles() {
+        return new ListResponse(roleService.getAllRoleTitles());}
 }

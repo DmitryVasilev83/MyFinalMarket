@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import ru.vasilev.market.api.JwtRequest;
 import ru.vasilev.market.api.RegistrationUserDto;
 import ru.vasilev.market.api.UserDto;
-import ru.vasilev.market.auth.repositories.UserRepository;
+import ru.vasilev.market.auth.entities.Role;
 import ru.vasilev.market.auth.entities.User;
 
 @Component
@@ -15,7 +15,7 @@ public class UserMapper {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
-                .role(user.getRoles().get(0).getName())
+                .rolesTitle(user.getRoles().stream().map(Role::getTitle).toList())
                 .access(user.getAccess())
                 .build();
     }
