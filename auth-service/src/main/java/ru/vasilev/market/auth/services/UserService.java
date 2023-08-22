@@ -16,9 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.vasilev.market.api.JwtRequest;
-import ru.vasilev.market.api.RegistrationUserDto;
-import ru.vasilev.market.api.UserDtoRoles;
+import ru.vasilev.market.api.*;
 import ru.vasilev.market.auth.exceptions.AccessForbiddenException;
 import ru.vasilev.market.auth.exceptions.BanUserException;
 import ru.vasilev.market.auth.exceptions.IncorrectLoginOrPasswordException;
@@ -30,7 +28,6 @@ import ru.vasilev.market.auth.mappers.UserMapper;
 import ru.vasilev.market.auth.utils.JwtTokenUtil;
 import java.util.Collection;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -187,19 +184,18 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void updateUser(RegistrationUserDto registrationUserDto) {
-        JwtRequest jwtRequest = userMapper.mapRegistrationUserDtoToJwtRequest(registrationUserDto);
+    public void updateUser(UserPersonalAccountRequest form, String username) {
+        JwtRequest jwtRequest = JwtRequest.builder()
+                .password(form.getConfirmPassword())
+                .username(username)
+                .build();
         auth(jwtRequest);
-        User user = getByName(jwtRequest.getUsername());
-        if (registrationUserDto.getEmail() != null) {
-            user.setEmail(registrationUserDto.getEmail());
+        User user = getByName(username);
+        user.setEmail(form.getEmail());
+        if (form.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(form.getPassword()));
         }
-        if (registrationUserDto.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(registrationUserDto.getPassword()));
-        }
-        if (registrationUserDto.getFullName() != null) {
-            user.setFullName(registrationUserDto.getFullName());
-        }
+        user.setFullName(form.getFullName());
         userRepository.save(user);
     }
 

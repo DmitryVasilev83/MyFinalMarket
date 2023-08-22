@@ -3,7 +3,6 @@ package ru.vasilev.market.auth.controllers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.vasilev.market.api.*;
@@ -11,9 +10,8 @@ import ru.vasilev.market.auth.entities.User;
 import ru.vasilev.market.auth.mappers.UserMapper;
 import ru.vasilev.market.auth.repositories.Specifications.UsersSpecifications;
 import ru.vasilev.market.auth.services.UserService;
-import java.util.Objects;
-import ru.vasilev.market.auth.exceptions.AccessForbiddenException;
 import java.security.Principal;
+import ru.vasilev.market.auth.validation.UserUpdateFormValidationRulesEngine;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -21,6 +19,7 @@ import java.security.Principal;
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
+    private final UserUpdateFormValidationRulesEngine userUpdateFormValidationRulesEngine;
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/all")
@@ -66,19 +65,16 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @PutMapping("/my")
-    public StringResponse updateAnyUserData(@RequestBody RegistrationUserDto registrationUserDto, Principal principal) {
-        if (!Objects.equals(principal.getName(), registrationUserDto.getUsername())) {
-            throw new AccessForbiddenException("Запрещено изменять чужие персональные данные.");
-        }
-        userService.updateUser(registrationUserDto);
-        return new StringResponse(String.format("Данные пользователя %s успешно обновлены.", registrationUserDto.getUsername()));
+    public void updateUserData(@RequestBody UserPersonalAccountRequest form, Principal principal) {
+        userUpdateFormValidationRulesEngine.check(form);
+        userService.updateUser(form, principal.getName());
     }
 
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @GetMapping("/personal-data/my")
-    public UserPersonalAccount getUserPersonalData(Principal principal) {
+    public UserPersonalAccountResponse getUserPersonalData(Principal principal) {
         final String username = principal.getName();
-        return UserPersonalAccount.builder()
+        return UserPersonalAccountResponse.builder()
                 .username(username)
                 .email(userService.getUserEmailByName(username))
                 .fullName(userService.getFullNameByName(username))
