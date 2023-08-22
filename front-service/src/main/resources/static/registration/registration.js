@@ -34,6 +34,7 @@ angular.module('market').controller('registrationController', function ($scope, 
             if (response.data.token) {
                 $http.defaults.headers.common.Authorization = 'Bearer ' + response.data.token;
                 $localStorage.mstMarketUser = {username: $scope.reguser.username, token: response.data.token};
+                $rootScope.username = $localStorage.mstMarketUser.username;
                 alert('Привет ' + $localStorage.mstMarketUser.username + '!')
                 $location.path("/");
 

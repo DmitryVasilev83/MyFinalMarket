@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.vasilev.market.core.services.CategoryService;
-
+import ru.vasilev.market.api.ValueWrapper;
 import java.util.List;
 
 @RestController
@@ -15,8 +15,8 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @GetMapping
-    public List<String> getAllCategory() {
-        return categoryService.getTitleCategory();
+    @GetMapping("/titles")
+    public ValueWrapper<List<String>> getAllCategory() {
+        return new ValueWrapper<>(categoryService.getTitleCategory());
     }
 }
