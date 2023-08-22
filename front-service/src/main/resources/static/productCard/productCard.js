@@ -117,13 +117,13 @@ angular.module('market').controller('productCardController', function ($scope, $
              return true;
          }
 
-         $rootScope.addToCart = function (id) {
-             $http.get('http://localhost:5555/cart/api/v1/cart/' + $localStorage.mstMarketGuestCartId + '/add/' + id)
-                 .then(function (response) {
-                     $localStorage.currentCartUser = response.data;
-                     $scope.getProductCardById();
-                 });
-         }
+     $rootScope.addToCart = function (id) {
+         $http.get('http://localhost:5555/cart/api/v1/cart/' + $localStorage.mstMarketGuestCartId + '/add/' + id)
+             .then(function (response) {
+                 $localStorage.currentCartUser = response.data;
+                 $scope.getProductCardById();
+             });
+     }
 
     $scope.getProductCardById();
 });

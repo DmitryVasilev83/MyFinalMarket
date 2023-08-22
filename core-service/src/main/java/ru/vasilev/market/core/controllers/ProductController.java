@@ -20,13 +20,11 @@ import ru.vasilev.market.api.StringResponse;
 import ru.vasilev.market.core.exceptions.ResourceNotFoundException;
 import ru.vasilev.market.core.mappers.ProductMapper;
 import ru.vasilev.market.core.repositories.specifications.ProductsSpecifications;
-import ru.vasilev.market.core.entities.Category;
 import ru.vasilev.market.core.entities.Product;
 import ru.vasilev.market.core.exceptions.AppError;
 import ru.vasilev.market.core.services.CategoryService;
 import ru.vasilev.market.core.services.ProductService;
 import java.math.BigDecimal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/products")
@@ -52,32 +50,23 @@ public class ProductController {
         }
         Specification<Product> spec = Specification.where(null);
         if (titlePart != null) {
-            spec = spec.and(ProductsSpecifications.titleLike(titlePart))
-                    .and(ProductsSpecifications.visibleLike());
+            spec = spec.and(ProductsSpecifications.titleLike(titlePart));
         }
-        else if (minPrice != null) {
-            spec = spec.and(ProductsSpecifications.priceGreaterOrEqualsThan(BigDecimal.valueOf(minPrice)))
-                    .and(ProductsSpecifications.visibleLike());
+        if (minPrice != null) {
+            spec = spec.and(ProductsSpecifications.priceGreaterOrEqualsThan(BigDecimal.valueOf(minPrice)));
         }
-        else if (maxPrice != null) {
-            spec = spec.and(ProductsSpecifications.priceLessThanOrEqualsThan(BigDecimal.valueOf(maxPrice)))
-                    .and(ProductsSpecifications.visibleLike());
-        } else if (categoryTitle != null) {
-            spec = spec.and(ProductsSpecifications.titleCategoryLike(categoryTitle))
-                    .and(ProductsSpecifications.visibleLike());
-        } else {
-            spec = spec.and(ProductsSpecifications.visibleLike());
+        if (maxPrice != null) {
+            spec = spec.and(ProductsSpecifications.priceLessThanOrEqualsThan(BigDecimal.valueOf(maxPrice)));
         }
+        if (categoryTitle != null) {
+            spec = spec.and(ProductsSpecifications.titleCategoryLike(categoryTitle));
+        }
+        spec = spec.and(ProductsSpecifications.visibleLike());
         return productService.findAll(page - 1, pageSize, spec).map(productMapper::mapProductToProductDto);
     }
 
-    @GetMapping("/categories")
-    public List<Category> getCategoriesProducts() {
-        return categoryService.getAllCategories();
-    }
-
     @PreAuthorize("hasAuthority('ROLE_MANAGER')")
-    @GetMapping("/getProduct")
+    @GetMapping("/cards")
     public Page<ProductCardDto> getProductListEdit(
             @RequestParam(name = "p", defaultValue = "1") Integer page,
             @RequestParam(name = "page_size", defaultValue = "5") Integer pageSize,
@@ -120,7 +109,7 @@ public class ProductController {
             }
     )
     @PreAuthorize("hasAuthority('ROLE_MANAGER')")
-    @PostMapping("/create")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> createNewProducts(@RequestBody ProductCardDto productCardDto) {
         productService.createNewProduct(productCardDto);
@@ -129,8 +118,8 @@ public class ProductController {
     }
 
     @PreAuthorize("hasAuthority('ROLE_MANAGER')")
-    @PostMapping("/updateProduct")
-    public ResponseEntity<?> updateDataProduct(@RequestBody ProductCardDto productCardDto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateDataProduct(@PathVariable Long id, @RequestBody ProductCardDto productCardDto) {
         productService.updateProduct(productCardDto);
         StringResponse stringResponse = new StringResponse(String.format("Продукт %s успешно обновлен", productCardDto.getTitle()));
         return ResponseEntity.ok(stringResponse);
@@ -143,8 +132,15 @@ public class ProductController {
 
     @PreAuthorize("hasAuthority('ROLE_MANAGER')")
     @PostMapping("/editVisible/{id}")
-    public void updateVisibleProduct(@PathVariable Long id, @RequestParam(name = "visible") Boolean visible) {
-        productService.updateVisible(id, visible);
+    @PutMapping("/{id}/visualize")
+    public void visualizeProduct(@PathVariable Long id ) {
+        productService.updateVisible(id, true);
+    }
+
+    @PreAuthorize("hasAuthority('ROLE_MANAGER')")
+    @PutMapping("/{id}/unvisualize")
+    public void unvisualizeProduct(@PathVariable Long id ) {
+        productService.updateVisible(id, false);
     }
 
     @GetMapping("/card/{id}")
@@ -152,4 +148,9 @@ public class ProductController {
         return productCardMapper.mapProductToProductCardDto(productService.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Продукт с id: " + id + " не найден")));
     }
+
+//    @PutMapping("/{id}/images/{imageId}")
+//    public void updateProductImage(@PathVariable Long id, @PathVariable String imageId) {
+//        productService.updateProductImage(id, imageId);
+//    }
 }

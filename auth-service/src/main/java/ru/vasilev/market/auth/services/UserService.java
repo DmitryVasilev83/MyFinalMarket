@@ -16,17 +16,20 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.vasilev.market.api.JwtRequest;
-import ru.vasilev.market.api.RegistrationUserDto;
-import ru.vasilev.market.api.UserDtoRoles;
-import ru.vasilev.market.auth.exceptions.*;
+import ru.vasilev.market.api.*;
+import ru.vasilev.market.auth.exceptions.AccessForbiddenException;
+import ru.vasilev.market.auth.exceptions.BanUserException;
+import ru.vasilev.market.auth.exceptions.IncorrectLoginOrPasswordException;
+import ru.vasilev.market.auth.exceptions.ResourceNotFoundException;
 import ru.vasilev.market.auth.repositories.UserRepository;
 import ru.vasilev.market.auth.entities.Role;
 import ru.vasilev.market.auth.entities.User;
 import ru.vasilev.market.auth.mappers.UserMapper;
 import ru.vasilev.market.auth.utils.JwtTokenUtil;
 import java.util.Collection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import ru.vasilev.market.auth.entities.Avatar;
 import ru.vasilev.market.api.RoleTitlesResponse;
@@ -34,6 +37,7 @@ import ru.vasilev.market.api.RoleTitlesResponse;
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
+
     private final UserRepository userRepository;
     private final RoleService roleService;
     private final AuthenticationManager authenticationManager;
@@ -72,26 +76,13 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public void reg(RegistrationUserDto registrationUserDto) {
-        if (registrationUserDto.getUsername() == null || registrationUserDto.getPassword() == null
-                || registrationUserDto.getConfirmPassword() == null || registrationUserDto.getEmail() == null
-                || registrationUserDto.getFullName() == null) {
-            throw new FieldsNotNullException("Все поля формы должны быть заполнены");
-        }
-        if (!registrationUserDto.getPassword().equals(registrationUserDto.getConfirmPassword())) {
-            throw new DontMatchPasswordsException("Пароли не совпадают");
-        }
-        if (existByUsername(registrationUserDto.getUsername())) {
-            throw new TheUserAlreadyExistsException("Пользователь с таким именем уже существует");
-        }
-        if (existByEmail(registrationUserDto.getEmail())) {
-            throw new TheUserAlreadyExistsException("Пользователь с таким email уже существует");
-        }
+    @Transactional
+    public void reg(RegistrationUserDto form) {
         User user = new User();
-        user.setEmail(registrationUserDto.getEmail());
-        user.setUsername(registrationUserDto.getUsername());
-        user.setPassword(passwordEncoder.encode(registrationUserDto.getPassword()));
-        user.setFullName(registrationUserDto.getFullName());
+        user.setEmail(form.getEmail());
+        user.setUsername(form.getUsername());
+        user.setPassword(passwordEncoder.encode(form.getPassword()));
+        user.setFullName(form.getFullName());
         user.setAccess(true);
         List<Role> roles = new ArrayList<>();
         roles.add(roleService.getUserRole());
@@ -193,19 +184,18 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public void updateUser(RegistrationUserDto registrationUserDto) {
-        JwtRequest jwtRequest = userMapper.mapRegistrationUserDtoToJwtRequest(registrationUserDto);
+    public void updateUser(UserPersonalAccountRequest form, String username) {
+        JwtRequest jwtRequest = JwtRequest.builder()
+                .password(form.getConfirmPassword())
+                .username(username)
+                .build();
         auth(jwtRequest);
-        User user = getByName(jwtRequest.getUsername());
-        if (registrationUserDto.getEmail() != null) {
-            user.setEmail(registrationUserDto.getEmail());
+        User user = getByName(username);
+        user.setEmail(form.getEmail());
+        if (form.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(form.getPassword()));
         }
-        if (registrationUserDto.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(registrationUserDto.getPassword()));
-        }
-        if (registrationUserDto.getFullName() != null) {
-            user.setFullName(registrationUserDto.getFullName());
-        }
+        user.setFullName(form.getFullName());
         userRepository.save(user);
     }
 
