@@ -90,7 +90,19 @@ angular.module('market').controller('storeController', function ($scope, $http, 
                     $scope.favorite = response.data;
                     $rootScope.currentFavoriteUser = response.data;
                 });
-        };
+     };
+
+     $scope.subscribeBackToStock = function(id){
+             $http({
+                 url: 'http://localhost:5555/email/api/v1/subscription/my',
+                 method: 'POST',
+                 params: {
+                     productId: id
+                 }
+             }).then(function (response){
+                   alert('Вы получите оповещение на ваш email как только продукт снова появиться в продаже');
+             });
+     };
 
     $scope.loadCart();
     $scope.loadProducts();
