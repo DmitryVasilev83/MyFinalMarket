@@ -63,5 +63,14 @@ angular.module('market').controller('productsController', function ($scope, $htt
         $location.path('/productCard').search({id: id, flag: bov});
     }
 
+    $scope.sendEmails = function (id) {
+         $http({
+              url:"http://localhost:5555/email/api/v1/subscription/" + id,
+              method: 'DELETE'
+         }).then(function (response) {
+               alert(response.data.value);
+         });
+    }
+
     $scope.loadProducts();
 });

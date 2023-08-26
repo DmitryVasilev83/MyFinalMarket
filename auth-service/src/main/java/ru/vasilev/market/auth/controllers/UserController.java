@@ -86,4 +86,14 @@ public class UserController {
     public RoleTitlesResponse getUserRoles(Principal principal) {
         return userService.getUserRoles(principal.getName());
     }
+
+    @GetMapping("/personal-email")
+    public UserPersonalAccount getUserPersonalEmail(@RequestHeader String username) {
+        UserPersonalAccount account = UserPersonalAccount.builder()
+                .username(username)
+                .email(userService.getUserEmailByName(username))
+                .fullName(userService.getFullNameByName(username))
+                .build();
+        return account;
+    }
 }

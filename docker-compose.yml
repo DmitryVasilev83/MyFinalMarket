@@ -97,7 +97,12 @@ services:
 #    ports:
 #      - "8195:8195"
 
-
+#    email-service:
+#      image: email-service
+#      build:
+#        context: email-service/
+#      ports:
+#        - "8193:8193"
 
 
 
