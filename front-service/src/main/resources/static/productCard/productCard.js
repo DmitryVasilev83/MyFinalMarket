@@ -1,8 +1,21 @@
 angular.module('market').controller('productCardController', function ($scope, $http, $localStorage, $rootScope, $location, $routeParams) {
 
     const contextPath = 'http://localhost:5555/core/api/v1/products'
+    const contextPathImg = 'http://localhost:5555/image/api/v1/images/'
+    const element = document.querySelector('#image');
+
+    const input = document.querySelector('#image_uploads');
+        const reader = new FileReader();
+
+        const imageTypes = [
+            "image/jpg",
+            "image/jpeg",
+            "image/png",
+        ];
 
     $scope.comment = {user: null, product: null, description: null, estimation: null};
+
+    $scope.productImage = {id : null, title : null, image : null};
 
     $scope.getEstimation = function (product = $scope.productCard) {
             $http({
@@ -39,6 +52,7 @@ angular.module('market').controller('productCardController', function ($scope, $
          $http.get(contextPath + '/card/' + $routeParams.id)
             .then(function success(response) {
                 $scope.productCard = response.data;
+                $scope.getImageById();
                 $scope.loadComments();
                 $scope.getDataComment();
             });
@@ -124,6 +138,85 @@ angular.module('market').controller('productCardController', function ($scope, $
                  $scope.getProductCardById();
              });
      }
+
+      $scope.getImageById = function () {
+         $http.get(contextPathImg + $scope.productCard.imageId)
+             .then(function success(response) {
+                 console.log(response.data)
+                 if (response.data) {
+                     const image = response.data.image;
+                     const binaryString = window.atob(image);
+                     const bytes = new Uint8Array(binaryString.length);
+                     const arrayBuffer = bytes.map((byte, i) => binaryString.charCodeAt(i));
+                     if (element.src) {
+                         URL.revokeObjectURL(element.src);
+                     }
+                     element.src = URL.createObjectURL(new Blob([arrayBuffer], {type: 'image/*'}));
+                 }
+             });
+     }
+
+     $scope.uploadImage = function () {
+             if ($scope.productImage.image) {
+                 URL.revokeObjectURL(element.src);
+                 $http.post(contextPathImg, $scope.productImage)
+                     .then(function success() {
+                             alert('Удалось загрузить изображение!');
+                         },
+                         function error(response) {
+                             alert('Не удалось загрузить изображение!');
+                             let me = response;
+                             console.log(me);
+                             alert(me.data.message);
+                         });
+             }
+     }
+
+     $scope.deleteImage = function (productId) {
+         if ($scope.productCard.imageId) {
+             $scope.productImage.productId = productId;
+             console.log($scope.productImage.productId);
+             $http.delete(contextPathImg + $scope.productCard.imageId + '/products/' + $scope.productCard.id)
+                 .then(function success() {
+                         alert('Удалось удалить изображение!');
+                         $scope.getProductCardById();
+                     },
+                     function error(response) {
+                         alert('Не удалось удалить изображение!');
+                         let me = response;
+                         console.log(me);
+                         alert(me.data.message);
+                     });
+         }
+     }
+
+     function updateImage() {
+         const curFiles = input.files;
+         if (curFiles.length > 0) {
+             for (const file of curFiles) {
+                 if (valiImageType(file)) {
+                     if (element.src) {
+                         URL.revokeObjectURL(element.src);
+                         $scope.productImage.image = null;
+                     }
+                     element.src = URL.createObjectURL(file);
+                     reader.readAsDataURL(file);
+                     $scope.productImage.title = file.name;
+                     $scope.productImage.productId = $scope.productCard.id;
+                 }
+             }
+         }
+     }
+
+     function valiImageType(file) {
+         return imageTypes.includes(file.type);
+     }
+
+     reader.onload = function () {
+         $scope.productImage.image = reader.result.split(',')[1];
+     }
+
+     input.addEventListener('change', updateImage);
 
     $scope.getProductCardById();
 });

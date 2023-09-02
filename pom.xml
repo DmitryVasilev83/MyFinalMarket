@@ -14,8 +14,9 @@
         <module>favorite-service</module>
 		<module>comment-service</module>
 		<module>email-service</module>
+        <module>image-service</module>
 
-	</modules>
+    </modules>
 
 	<groupId>ru.vasilev.market</groupId>
 	<artifactId>market</artifactId>
