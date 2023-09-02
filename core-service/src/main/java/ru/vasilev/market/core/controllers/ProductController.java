@@ -149,8 +149,9 @@ public class ProductController {
                 .orElseThrow(() -> new ResourceNotFoundException("Продукт с id: " + id + " не найден")));
     }
 
-//    @PutMapping("/{id}/images/{imageId}")
-//    public void updateProductImage(@PathVariable Long id, @PathVariable String imageId) {
-//        productService.updateProductImage(id, imageId);
-//    }
+    @PreAuthorize("hasAnyAuthority('ROLE_MANAGER', 'ROLE_ADMIN')")
+    @PutMapping("/{id}/images/{imageId}")
+    public void updateProductImage(@PathVariable Long id, @PathVariable String imageId) {
+        productService.updateProductImage(id, imageId);
+    }
 }
