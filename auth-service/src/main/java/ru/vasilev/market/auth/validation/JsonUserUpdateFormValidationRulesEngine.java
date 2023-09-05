@@ -5,18 +5,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import ru.vasilev.market.api.UserPersonalAccountRequest;
 import ru.vasilev.market.api.ValidationError;
-import ru.vasilev.market.api.ValueWrapper;
 import ru.vasilev.market.auth.entities.User;
-import ru.vasilev.market.auth.exceptions.UserFormValidationErrorException;
 import ru.vasilev.market.auth.services.UserService;
 import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import ru.vasilev.market.api.ListResponse;
+import ru.vasilev.market.auth.exceptions.JsonUserFormValidationErrorException;
 
 @Component
 @RequiredArgsConstructor
-public class UserUpdateFormValidationRulesEngine {
+public class JsonUserUpdateFormValidationRulesEngine {
 
     private final UserService userService;
     Validator<UserPersonalAccountRequest> validator;
@@ -84,7 +84,7 @@ public class UserUpdateFormValidationRulesEngine {
     public final void check(UserPersonalAccountRequest form) {
         List<ValidationError> errors = validator.validate(form);
         if (!errors.isEmpty()) {
-            throw new UserFormValidationErrorException(new ValueWrapper<>(errors));
+            throw new JsonUserFormValidationErrorException(new ListResponse<>(errors));
         }
     }
 

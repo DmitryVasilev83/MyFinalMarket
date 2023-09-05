@@ -52,7 +52,6 @@ public class Avatar {
     public String toString() {
         return "Avatar{" +
                 "id=" + id +
-                ", user=" + user.getUsername() +
                 '}';
     }
 }

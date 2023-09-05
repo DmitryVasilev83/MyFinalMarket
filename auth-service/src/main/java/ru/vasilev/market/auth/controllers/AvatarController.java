@@ -8,6 +8,7 @@ import ru.vasilev.market.auth.mappers.AvatarMapper;
 import ru.vasilev.market.auth.services.AvatarService;
 import ru.vasilev.market.auth.services.UserService;
 import java.security.Principal;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/v1/avatars")
@@ -25,8 +26,9 @@ public class AvatarController {
 
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @PutMapping("/my")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateUserAvatar(@RequestBody AvatarPersonalAccount avatar, Principal principal) {
-        avatarService.update(avatarMapper.map(avatar, userService.getByName(principal.getName())));
+        avatarService.update(avatarMapper.map(avatar, userService.getUserByName(principal.getName())));
     }
 }
 

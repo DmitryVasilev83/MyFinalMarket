@@ -11,7 +11,10 @@ import ru.vasilev.market.auth.mappers.UserMapper;
 import ru.vasilev.market.auth.repositories.Specifications.UsersSpecifications;
 import ru.vasilev.market.auth.services.UserService;
 import java.security.Principal;
-import ru.vasilev.market.auth.validation.UserUpdateFormValidationRulesEngine;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
+import ru.vasilev.market.auth.validation.JsonUserRegistrationFormValidationRulesEngine;
+import ru.vasilev.market.auth.validation.JsonUserUpdateFormValidationRulesEngine;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -19,10 +22,11 @@ import ru.vasilev.market.auth.validation.UserUpdateFormValidationRulesEngine;
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
-    private final UserUpdateFormValidationRulesEngine userUpdateFormValidationRulesEngine;
+    private final JsonUserUpdateFormValidationRulesEngine userUpdateFormValidationRulesEngine;
+    private final JsonUserRegistrationFormValidationRulesEngine userRegistrationValidationRulesEngine;
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @GetMapping("/all")
+    @GetMapping
     public Page<UserDto> getAllUsers(
             @RequestParam(name = "p", defaultValue = "1") Integer page,
             @RequestParam(name = "page_size", defaultValue = "5") Integer pageSize,
@@ -39,32 +43,29 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('ROLE_SUPERADMIN')")
-    @PutMapping("/edit-role")
-    public StringResponse editRole(@RequestBody UserDtoRoles userDtoRoles) {
-        userService.editRole(userDtoRoles);
-        return new StringResponse("Права пользователя изменены");
+    @PutMapping("/{id}/roles")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void editRole(@PathVariable Long id, @RequestBody UserDtoRoles userDtoRoles) {
+        userService.editRole(userDtoRoles, id);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @PostMapping("/banUser/{id}")
-    public void banUser(@PathVariable Long id, @RequestParam(name = "access") Boolean access) {
-        userService.updateAccessUser(id, access);
+    @PutMapping("/{id}/ban")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void banUser(@PathVariable Long id) {
+        userService.updateAccessUser(id, false);
     }
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @GetMapping("/email/{username}")
-    public StringResponse getAnyEmailAddress(@PathVariable String username) {
-        return new StringResponse(userService.getUserEmailByName(username));
-    }
-
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    @GetMapping("/full-name/{username}")
-    public StringResponse getAnyFullName(@PathVariable String username) {
-        return new StringResponse(userService.getFullNameByName(username));
+    @PutMapping("/{id}/unban")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unbanUser(@PathVariable Long id) {
+        userService.updateAccessUser(id, true);
     }
 
     @PreAuthorize("hasAuthority('ROLE_USER')")
     @PutMapping("/my")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateUserData(@RequestBody UserPersonalAccountRequest form, Principal principal) {
         userUpdateFormValidationRulesEngine.check(form);
         userService.updateUser(form, principal.getName());
@@ -87,13 +88,23 @@ public class UserController {
         return userService.getUserRoles(principal.getName());
     }
 
-    @GetMapping("/personal-email")
-    public UserPersonalAccount getUserPersonalEmail(@RequestHeader String username) {
-        UserPersonalAccount account = UserPersonalAccount.builder()
-                .username(username)
-                .email(userService.getUserEmailByName(username))
-                .fullName(userService.getFullNameByName(username))
+//    @GetMapping("/personal-email")
+//    public UserPersonalAccount getUserPersonalEmail(@RequestHeader String username) {
+//        UserPersonalAccount account = UserPersonalAccount.builder()
+//                .username(username)
+//                .email(userService.getUserEmailByName(username))
+//                .fullName(userService.getFullNameByName(username))
+//                .build();
+//        return account;
+//    }
+
+    @PostMapping
+    public JwtResponse createAuthToken(@RequestBody RegistrationUserDto form) {
+        userRegistrationValidationRulesEngine.check(form);
+        userService.reg(form);
+        UserDetails userDetails = userService.loadUserByUsername(form.getUsername());
+        return JwtResponse.builder()
+                .token(userService.getToken(userDetails))
                 .build();
-        return account;
     }
 }
