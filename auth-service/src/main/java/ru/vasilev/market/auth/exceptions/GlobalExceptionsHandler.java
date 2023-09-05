@@ -4,9 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import ru.vasilev.market.api.ListResponse;
 import ru.vasilev.market.api.ValidationError;
-import ru.vasilev.market.api.ValueWrapper;
-import java.util.List;
 
 @ControllerAdvice
 public class GlobalExceptionsHandler {
@@ -37,7 +36,7 @@ public class GlobalExceptionsHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ValueWrapper<List<ValidationError>>> handleUserFormValidationErrorException(UserFormValidationErrorException e) {
+    public ResponseEntity<ListResponse<ValidationError>> handleUserFormValidationErrorException(JsonUserFormValidationErrorException e) {
         return new ResponseEntity<>(e.getErrors(), HttpStatus.BAD_REQUEST);
     }
 }

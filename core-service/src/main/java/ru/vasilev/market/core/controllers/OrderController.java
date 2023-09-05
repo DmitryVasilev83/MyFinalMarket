@@ -24,9 +24,9 @@ public class OrderController {
     public ValueWrapper<List<OrderDto>> getUserOrders(Principal principal) {
         return new ValueWrapper<>(
                 orderService.findUserOrders(principal.getName())
-                .stream()
-                .map(orderMapper::mapOrderToOrderDto)
-                .collect(Collectors.toList()));
+                    .stream()
+                    .map(orderMapper::mapOrderToOrderDto)
+                    .collect(Collectors.toList()));
     }
 
     @PreAuthorize("hasAuthority('ROLE_USER')")
