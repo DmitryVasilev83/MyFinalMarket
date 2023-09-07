@@ -14,8 +14,7 @@ services:
       interval: 5s
       timeout: 1s
       retries: 2
-    volumes:
-      - ./memoryDocker:/var/lib/postgresql/data/
+
 
   flyway:
     image: boxfuse/flyway
@@ -39,86 +38,89 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
-    volumes:
-      - ./images/default:/default
     ports:
       - "27017:27017"
 
-#  front-service:
-#    image: front-service
-#    build:
-#      context: front-service/
-#    ports:
-#      - "3000:3000"
-#
-#  gateway-service:
-#    image: gateway-service
-#    build:
-#      context: gateway-service/
-#    ports:
-#      - "5555:5555"
-#
-#  auth-service:
-#    image: auth-service
-#    build:
-#      context: auth-service/
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
-#    depends_on:
-#      - postgres
-#    ports:
-#      - "8187:8187"
-#
-#  core-service:
-#    image: core-service
-#    build:
-#      context: core-service/
-#    environment:
-#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
-#    depends_on:
-#      - postgres
-#    ports:
-#      - "8189:8189"
-#
-#  cart-service:
-#    image: cart-service
-#    build:
-#      context: cart-service/
-#    depends_on:
-#      - redis
-#    ports:
-#      - "8190:8190"
+  front-service:
+    image: front-service
+    build:
+      context: front-service/
+    ports:
+      - "3000:3000"
 
-#  favorite-service:
-#    image: favorite-service
-#    build:
-#      context: favorite-service/
-#    depends_on:
-#      - redis
-#    ports:
-#      - "8192:8192"
+  gateway-service:
+    image: gateway-service
+    build:
+      context: gateway-service/
+    ports:
+      - "5555:5555"
 
-#  comment-service:
-#    image: favorite-service
-#    build:
-#      context: favorite-service/
-#    depends_on:
-#      - postgres
-#    ports:
-#      - "8195:8195"
+  auth-service:
+    image: auth-service
+    build:
+      context: auth-service/
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+    depends_on:
+      - postgres
+    ports:
+      - "8187:8187"
 
-#    email-service:
-#      image: email-service
-#      build:
-#        context: email-service/
-#      ports:
-#        - "8193:8193"
+  core-service:
+    image: core-service
+    build:
+      context: core-service/
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+    depends_on:
+      - postgres
+    ports:
+      - "8189:8189"
 
-#  image-service:
-#    image: image-service
-#    build:
-#      context: image-service/
-#    ports:
-#      - "8194:8194"
+  cart-service:
+    image: cart-service
+    build:
+      context: cart-service/
+    depends_on:
+      - redis
+    ports:
+      - "8190:8190"
 
+  favorite-service:
+    image: favorite-service
+    build:
+      context: favorite-service/
+    depends_on:
+      - redis
+    ports:
+      - "8192:8192"
+
+  comment-service:
+    image: favorite-service
+    build:
+      context: favorite-service/
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+    depends_on:
+      - postgres
+    ports:
+      - "8195:8195"
+
+    email-service:
+      image: email-service
+      build:
+        context: email-service/
+      ports:
+        - "8193:8193"
+
+  image-service:
+    image: image-service
+    build:
+      context: image-service/
+    volumes:
+      - ./images/default:/default
+    ports:
+      - "8194:8194"
+    depends_on:
+      - mongo
 

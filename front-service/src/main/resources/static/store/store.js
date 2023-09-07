@@ -37,6 +37,7 @@ angular.module('market').controller('storeController', function ($scope, $http, 
         $http.get('http://localhost:5555/cart/api/v1/cart/' + $localStorage.mstMarketGuestCartId + '/add/' + id)
             .then(function (response) {
                 $localStorage.currentCartUser = response.data;
+                $scope.loadProducts();
             });
     }
 

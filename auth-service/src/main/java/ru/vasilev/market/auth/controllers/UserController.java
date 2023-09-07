@@ -105,6 +105,10 @@ public class UserController {
         UserDetails userDetails = userService.loadUserByUsername(form.getUsername());
         return JwtResponse.builder()
                 .token(userService.getToken(userDetails))
+                .visibleAdministrationButton(userService.getAccessAdmin(form.getUsername()))
+                .visibleUserPanelButton(userService.getAccessUserPanel(form.getUsername()))
+                .visibleProductPanelButton(userService.getAccessProductPanel(form.getUsername()))
+                .visibleEditRoleButton(userService.getAccessEditRole(form.getUsername()))
                 .build();
     }
 }
