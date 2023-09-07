@@ -22,7 +22,6 @@ import ru.vasilev.market.core.mappers.ProductMapper;
 import ru.vasilev.market.core.repositories.specifications.ProductsSpecifications;
 import ru.vasilev.market.core.entities.Product;
 import ru.vasilev.market.core.exceptions.AppError;
-import ru.vasilev.market.core.services.CategoryService;
 import ru.vasilev.market.core.services.ProductService;
 import java.math.BigDecimal;
 
@@ -32,7 +31,6 @@ import java.math.BigDecimal;
 @Tag(name = "Продукты", description = "Методы работы с продуктами")
 public class ProductController {
     private final ProductService productService;
-    private final CategoryService categoryService;
     private final ProductMapper productMapper;
     private final ProductCardMapper productCardMapper;
 
@@ -62,7 +60,10 @@ public class ProductController {
             spec = spec.and(ProductsSpecifications.titleCategoryLike(categoryTitle));
         }
         spec = spec.and(ProductsSpecifications.visibleLike());
-        return productService.findAll(page - 1, pageSize, spec).map(productMapper::mapProductToProductDto);
+        return productService.findAll(page - 1, pageSize, spec).map(product -> {
+            Integer numberReservationProduct = productService.getNumberReservationProduct(product.getId());
+            return productMapper.mapProductToProductDto(product, numberReservationProduct);
+        });
     }
 
     @PreAuthorize("hasAuthority('ROLE_MANAGER')")
@@ -79,7 +80,10 @@ public class ProductController {
         if (titlePart != null) {
             spec = spec.and(ProductsSpecifications.titleLike(titlePart));
         }
-        return productService.findAll(page - 1, pageSize, spec).map(productCardMapper::mapProductToProductCardDto);
+        return productService.findAll(page - 1, pageSize, spec).map(product -> {
+            Integer numberReservationProduct = productService.getNumberReservationProduct(product.getId());
+            return productCardMapper.mapProductToProductCardDto(product, numberReservationProduct);
+        });
     }
 
     @Operation(
@@ -97,7 +101,11 @@ public class ProductController {
     )
     @GetMapping("/{id}")
     public ProductDto getProductById(@PathVariable @Parameter(description = "Идентификатор продукта", required = true) Long id) {
-        return productMapper.mapProductToProductDto(productService.findById(id).orElseThrow(() -> new ResourceNotFoundException("Продукт с id: " + id + " не найден")));
+        Integer numberReservationProduct = productService.getNumberReservationProduct(id);
+        return productMapper
+                .mapProductToProductDto(productService
+                    .findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Продукт с id: " + id + " не найден")), numberReservationProduct);
     }
 
     @Operation(
@@ -145,8 +153,10 @@ public class ProductController {
 
     @GetMapping("/card/{id}")
     public ProductCardDto getProductCardById(@PathVariable @Parameter(description = "Идентификатор продукта", required = true) Long id) {
+        Integer numberReservationProduct = productService.getNumberReservationProduct(id);
         return productCardMapper.mapProductToProductCardDto(productService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Продукт с id: " + id + " не найден")));
+                .orElseThrow(() -> new ResourceNotFoundException("Продукт с id: " + id + " не найден")),
+                numberReservationProduct);
     }
 
     @PreAuthorize("hasAnyAuthority('ROLE_MANAGER', 'ROLE_ADMIN')")

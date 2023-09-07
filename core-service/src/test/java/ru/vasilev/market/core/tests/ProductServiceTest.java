@@ -13,6 +13,7 @@ import ru.vasilev.market.core.entities.Category;
 import ru.vasilev.market.core.entities.Product;
 import ru.vasilev.market.core.services.CategoryService;
 import ru.vasilev.market.core.services.ProductService;
+import ru.vasilev.market.core.integrations.CartServiceIntegration;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -28,12 +29,16 @@ public class ProductServiceTest {
     @MockBean
     private CategoryService categoryService;
 
+    @MockBean
+    private CartServiceIntegration cartServiceIntegration;
+
     @Test
     public void createOrderTest() {
         ProductCardDto productCardDto = ProductCardDto.builder()
                 .price(new BigDecimal(20))
                 .title("Milk")
                 .categoryTitle("other")
+                .quantityReservation(1)
                 .quantity(3)
                 .id(50L)
                 .build();

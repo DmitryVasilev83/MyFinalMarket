@@ -28,6 +28,9 @@ public class ProductCardDto {
     @Schema(description = "Категория продукта", required = true, example = "Еда")
     private String categoryTitle;
 
+    @Schema(description = "Зарезервировано пользователями", required = true, example = "2")
+    private Integer quantityReservation;
+
     @Schema(description = "Количество на складе", required = true, example = "12")
     private Integer quantity;
 

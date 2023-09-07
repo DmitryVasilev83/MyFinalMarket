@@ -7,6 +7,7 @@ import ru.vasilev.market.api.StringResponse;
 import ru.vasilev.market.cart.common.SelectorId;
 import ru.vasilev.market.cart.mappers.CartMapper;
 import ru.vasilev.market.cart.services.CartService;
+import ru.vasilev.market.api.IntegerResponse;
 
 import java.util.UUID;
 
@@ -56,6 +57,11 @@ public class CartController {
                                     @PathVariable Long productId) {
         String idCart = selectorId.selectCart(username, guestCartId);
         cartService.decrementQuantity(idCart, productId);
+    }
+
+    @GetMapping("/reservation-product/{productId}")
+    public IntegerResponse getNumberReservationProduct(@PathVariable Long productId) {
+        return new IntegerResponse(cartService.getNumberReservationProduct(productId));
     }
 }
 

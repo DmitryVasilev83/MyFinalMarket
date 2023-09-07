@@ -14,6 +14,10 @@ import ru.vasilev.market.core.exceptions.ResourceNotFoundException;
 import ru.vasilev.market.core.exceptions.TheProductExistsException;
 import ru.vasilev.market.core.repositories.ProductRepository;
 import ru.vasilev.market.core.entities.Product;
+import ru.vasilev.market.api.CartItemDto;
+import ru.vasilev.market.api.IntegerResponse;
+import ru.vasilev.market.core.integrations.CartServiceIntegration;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,15 +25,16 @@ import java.util.Optional;
 public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryService categoryService;
+    private final CartServiceIntegration cartServiceIntegration;
 
     public Page<Product> findAll(int page, int pageSize, Specification<Product> specification) {
         Sort sort = Sort.by("title");
         return productRepository.findAll(specification, PageRequest.of(page, pageSize, sort));
     }
 
-    public void deleteById(Long id) {
-        productRepository.deleteById(id);
-    }
+//    public void deleteById(Long id) {
+//        productRepository.deleteById(id);
+//    }
 
     @Transactional
     public void updateProduct(ProductCardDto productCardDto) {
@@ -91,5 +96,20 @@ public class ProductService {
         Product byId = productRepository.getById(id);
         byId.setImageId(imageId);
         productRepository.save(byId);
+    }
+
+    public Integer getNumberReservationProduct(Long productId) {
+        IntegerResponse numberReservationProduct = cartServiceIntegration.getNumberReservationProduct(productId);
+        return numberReservationProduct.getValue();
+    }
+    @Transactional
+    public void updateProductsStorage(List<CartItemDto> items) {
+        items.forEach(item -> {
+            Long productId = item.getProductId();
+            Product byId = productRepository.getById(productId);
+            int quantity = byId.getQuantity();
+            byId.setQuantity(quantity - item.getQuantity());
+            productRepository.save(byId);
+        });
     }
 }
